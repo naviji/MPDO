@@ -1,10 +1,32 @@
 from z3 import *
 
-GRID_SZ = 3
-HOPS = 5
+def intersection_points(robot_pos, obs_pos):
+    (rx, ry) = robot_pos
+    (obx, oby) = obs_pos # (a, b)
+
+    robot_halo = set([(rx, ry), (rx+1, ry), (rx, ry+1), (rx, ry-1), (rx-1,ry)])
+    obs_halo = set([(obx, oby),(obx+1, oby), (obx, oby+1), (obx-1, oby),(obx, oby-1)])
+    return list(robot_halo.intersection(obs_halo))
+
+def print_plan(m):
+    return sorted([d.name() for d in m.decls() if m[d]==True])
+
+def get_robot_pos(m,time):
+    (_, _, x, y) = sorted([d.name() for d in m.decls() if m[d]==True])[time].split('_')
+    return (int(x), int(y)) 
+    
+GRID_SZ = 4
+HOPS = 10
 
 OBS_MOVEMENT = [
-      (2,2), (2, 3), (1,3), (0, 3), (0, 2), (0, 1)
+      (2,2), (2, 3), (1,3), (0, 3), (0, 2), (0, 1), (0, 1)
+      , (0, 1)
+      , (0, 1)
+      , (0, 1)
+      , (0, 1)
+      , (0, 1)
+      , (0, 1)
+      , (0, 1)
 ]
 
 # X is a three dimensional grid containing (t, x, y)
@@ -38,30 +60,36 @@ for t in range(HOPS):
                     temp = Or(temp, X[t][x][y-1])
             #     print(simplify(Implies(X[t+1][x][y], temp)))
                 s.add(simplify(Implies(X[t+1][x][y], temp)))
-print(s)
+# print(s)
 
 
 ########################################################
-
-s.push()
 # What is the current time ?
 time = 0
 obs_pos = OBS_MOVEMENT[time] # (2, 2)
+robot_pos = (0, 0) # (0, 0)
 
-# Don't go anywhere near obs_pos
-s.add(And(
-Not(X[time][obs_pos[0]][obs_pos[1]]),
-Not(X[time][obs_pos[0]][obs_pos[1]]),
-Not(X[time][obs_pos[0]][obs_pos[1]]),
-Not(X[time][obs_pos[0]][obs_pos[1]]),
-Not(X[time][obs_pos[0]][obs_pos[1]])
-))
+s.push()
+for (x, y) in intersection_points(robot_pos, obs_pos):
+    s.add(Not(X[time][x][y]))
 
+while (time < HOPS):
+    if s.check() == unsat:
+        print("Stay there")
+        time += 1
+        continue
 
-s.add()
+    m = s.model()
+    s.pop()
+    
+    obs_pos = OBS_MOVEMENT[time] # (2, 2)
+    robot_pos = get_robot_pos(m, time) # (0, 0)
+    print("robot at ",robot_pos, "at ", time)
+    print("obs at ",obs_pos, "at ", time)
 
-# loop {
-# }
+    s.push()
 
-# Implies(X[t+1][x][y], Or(X[t][x][y] , X[t][x+1][y]
-# , X[t][x][y+1]) , X[t][x-1][y] , X[t][r][x][y-1]))
+    print(intersection_points(robot_pos, obs_pos))
+    for (x, y) in intersection_points(robot_pos, obs_pos):
+        s.add(Not(X[time][x][y]))
+    time += 1
