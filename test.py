@@ -18,19 +18,19 @@ def get_robot_pos(m,time):
     return (int(x), int(y)) 
     
 GRID_SZ = 4
-HOPS = 6
+HOPS = 10
 
 OBS_MOVEMENT = [
-      (0, 2)
-      , (0, 2)
-      , (0, 2)
-      , (0, 2)
-      , (0, 2)
-      , (0, 2)
-      , (0, 2)
-      , (0, 2)
-      , (0, 2)
-      , (0, 2)
+      (0, 3)
+      , (0, 3)
+      , (0, 3)
+      , (0, 3)
+      , (0, 3)
+      , (0, 3)
+      , (0, 3)
+      , (0, 3)
+      , (0, 3)
+      , (0, 3)
 ]
 
 # X is a three dimensional grid containing (t, x, y)
@@ -48,7 +48,22 @@ s.add([Not(cell) for row in X[0] for cell in row][1:])
 s.add(X[HOPS][GRID_SZ-1][GRID_SZ-1])
 s.add([Not(cell) for row in X[HOPS] for cell in row][:-1])
 
-# Motion primitives
+#Sanity Constraints
+# for grid in X:
+#     for i in range(len(grid)):
+#         for j in range(len(grid)):
+#             for p in range(len(grid)):
+#                 for q in range(len(grid)):
+#                     if not (i==p and j==q):
+#                         s.add(And(grid[i][j], Not(grid[p][q])))
+
+# Safety constraints
+# s.add(X[HOPS][GRID_SZ-1][GRID_SZ-1])
+# s.add([Not(cell) for row in X[HOPS] for cell in row][:-1])
+
+
+
+#Motion primitives
 
 for t in range(HOPS):
       for x in range(GRID_SZ):
@@ -80,14 +95,21 @@ for (x, y) in intersection_points(robot_pos, obs_pos):
 # obs_pos = OBS_MOVEMENT[time] # (2, 2)
 # robot_pos = get_robot_pos(m, time) # (0, 0)
 
-
+for a in s.assertions():
+    print(a)
+# print(s)
 # 0 -> 9
+
+
+# THE PROBLEM WITH SCOPE!
 while (time < HOPS):
+    print("TIME IS %s" % time)
     print("robot at ",robot_pos, "at ", time)
     print("obs at ",obs_pos, "at ", time)
 
     if s.check() == unsat:
         print("Stay there")
+        time += 1
         continue
 
     m = s.model()
@@ -98,14 +120,16 @@ while (time < HOPS):
     print(intersection_points(robot_pos, obs_pos))
     for (x, y) in intersection_points(robot_pos, obs_pos):
         s.add(Not(X[time][x][y]))
-
+        print(Not(X[time][x][y]))
     
-    
+        
+    # for a in s.assertions():
+    #     print(a)
 
     obs_pos = OBS_MOVEMENT[time] # (2, 2)
     robot_pos = get_robot_pos(m, time) # (0, 0)
-
+m = s.model()
 # time is 10
 print("robot at ",robot_pos, "at ", time)
 print("obs at ",obs_pos, "at ", time)
-print(get_plan(m))
+# print(get_plan(m))
