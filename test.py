@@ -14,7 +14,7 @@ def get_plan(m):
     return sorted([d.name() for d in m.decls() if m[d]==True], key=lambda item: int(item.split('_')[1]))
 
 def get_robot_pos(m,time):
-    (_, _, x, y) = sorted([d.name() for d in m.decls() if m[d]==True], key=lambda item: int(item.split('_')[1]))[time].split('_')
+    (_, _, x, y) = get_plan(m)[time].split('_') 
     return (int(x), int(y)) 
     
 GRID_SZ = 4
@@ -87,27 +87,31 @@ time = 0
 obs_pos = OBS_MOVEMENT[time] # (2, 2)
 robot_pos = (0, 0) # (0, 0)
 
+print("TIME IS %s" % time)
+print("robot at ",robot_pos)
+print("obs at ",obs_pos)
+print(intersection_points(robot_pos, obs_pos))
+
 time += 1
 s.push()
 for (x, y) in intersection_points(robot_pos, obs_pos):
     s.add(Not(X[time][x][y]))
-
+# for a in s.assertions():
+#     print(a)
 # obs_pos = OBS_MOVEMENT[time] # (2, 2)
 # robot_pos = get_robot_pos(m, time) # (0, 0)
 
-for a in s.assertions():
-    print(a)
+
 # print(s)
 # 0 -> 9
-
 
 # THE PROBLEM WITH SCOPE!
 while (time < HOPS):
     print("TIME IS %s" % time)
-    print("robot at ",robot_pos, "at ", time)
-    print("obs at ",obs_pos, "at ", time)
-
+    print("robot at ",robot_pos)
+    print("obs at ",obs_pos)
     if s.check() == unsat:
+        
         print("Stay there")
         time += 1
         continue
@@ -116,20 +120,22 @@ while (time < HOPS):
 
     s.pop()
     s.push()
-    time += 1
-    print(intersection_points(robot_pos, obs_pos))
-    for (x, y) in intersection_points(robot_pos, obs_pos):
-        s.add(Not(X[time][x][y]))
-        print(Not(X[time][x][y]))
-    
+
+    # print(s.assertions())
         
-    # for a in s.assertions():
-    #     print(a)
+    print(get_plan(m))
 
     obs_pos = OBS_MOVEMENT[time] # (2, 2)
     robot_pos = get_robot_pos(m, time) # (0, 0)
-m = s.model()
-# time is 10
-print("robot at ",robot_pos, "at ", time)
-print("obs at ",obs_pos, "at ", time)
-# print(get_plan(m))
+
+    print(intersection_points(robot_pos, obs_pos))
+    for (x, y) in intersection_points(robot_pos, obs_pos):
+        s.add(Not(X[time+1][x][y]))
+    time += 1
+
+if s.check() == sat:
+    m = s.model()
+    # time is 10
+    print("robot at ",robot_pos)
+    print("obs at ",obs_pos)
+    
