@@ -36,16 +36,16 @@ def get_robot_pos(m,hop):
 def path_valid(robot_plan, obs_plan):
     return len([(a, b) for a, b in list(zip(robot_plan, obs_plan)) if a == b]) == 0
     
-GRID_SZ = 6
-HOPS = int(GRID_SZ*1.825)
+GRID_SZ = 4
+HOPS = 6
 
 print("WORKSPACE SIZE (%s x %s)" % (GRID_SZ, GRID_SZ))
 print("HOPS ALLOWED = %s" % (HOPS))
 
-def main():
+def main(args):
     # print(args)
-    # seed = int(args[0])
-    # random.seed(seed)
+    seed = int(args[0])
+    random.seed(seed)
 
     
     # X is a three dimensional grid containing (t, x, y)
@@ -152,5 +152,4 @@ def main():
 
 if __name__ == "__main__":
     # print(sys.argv)
-    # main(sys.argv[1:])
-    main()
+    main(sys.argv[1:])
