@@ -18,13 +18,20 @@ class Obstacle:
                 self.y += dy
                 return (self.x, self.y)
 
-def intersection_points(robot_pos, obs_pos):
-    (rx, ry) = robot_pos
+# def intersection_points(robot_pos, obs_pos):
+#     (rx, ry) = robot_pos
+#     (obx, oby) = obs_pos # (a, b)
+
+#     robot_halo = set([(rx, ry), (rx+1, ry), (rx, ry+1), (rx, ry-1), (rx-1,ry)])
+#     obs_halo = set([(obx, oby),(obx+1, oby), (obx, oby+1), (obx-1, oby),(obx, oby-1)])
+#     return list(robot_halo.intersection(obs_halo))
+def next_intersection_points(next_robot_pos, obs_pos):
+    (rx, ry) = next_robot_pos
     (obx, oby) = obs_pos # (a, b)
 
-    robot_halo = set([(rx, ry), (rx+1, ry), (rx, ry+1), (rx, ry-1), (rx-1,ry)])
+    robot_pos = set([(rx, ry)])
     obs_halo = set([(obx, oby),(obx+1, oby), (obx, oby+1), (obx-1, oby),(obx, oby-1)])
-    return list(robot_halo.intersection(obs_halo))
+    return list(robot_pos.intersection(obs_halo))
 
 def get_plan(m):
     return sorted([d.name() for d in m.decls() if m[d]==True], key=lambda item: int(item.split('_')[1]))
@@ -37,7 +44,7 @@ def path_valid(robot_plan, obs_plan):
     return len([(a, b) for a, b in list(zip(robot_plan, obs_plan)) if a == b]) == 0
     
 GRID_SZ = 10
-HOPS = 17
+HOPS = 18
 
 print("WORKSPACE SIZE (%s x %s)" % (GRID_SZ, GRID_SZ))
 print("HOPS ALLOWED = %s" % (HOPS))
@@ -115,21 +122,27 @@ def main(args):
 
         robot_plan.append(robot_pos)
         obs_plan.append(obs_pos)
-        
+        #next position of the robot
+        next_robot_pos = get_robot_pos(m,hop+1)
         s.push()
         # print("intersection points")
         # print(intersection_points(robot_pos, obs_pos))
-        
-        for (x, y) in intersection_points(robot_pos, obs_pos):
-            #consider only the intersection with the next step in the plan
+        # count = 0
+        next_overlap = next_intersection_points(next_robot_pos, obs_pos)
+        for (x, y) in next_overlap:
+            # consider only the intersection with the next step in the plan
             s.add(Not(X[hop+1][x][y]))
         
-        if s.check() == unsat:
-            print("stay there")
+        if len(next_overlap)>0: # we need to find a new path
+            if (s.check() == unsat):
+                print("stay there")
+            else:
+                m = s.model()
+                # print("Plan for hop = " + str(hop+1))
+                # print(get_plan(m))
+                hop += 1
         else:
-            m = s.model()
-            # print("Plan for hop = " + str(hop+1))
-            # print(get_plan(m))
+            # we don't need to worry about the path
             hop += 1
 
         s.pop()
