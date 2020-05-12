@@ -1,21 +1,22 @@
-higher=4
+higher=10
 seed=6
+grid=10
 
-python3 test.py $seed $higher 
+python3 test.py $seed $higher $grid > /dev/null
 
 while [[ $? -eq 1 ]]; do
     higher=$(($higher*2))
-    python3 test.py $seed $higher
+    python3 test.py $seed $higher $grid > /dev/null
 done
-echo higher is $higher
+# echo higher is $higher
 
 lower=$(($higher/2))
-while [[ lower -lt higher ]]; do
+while [[ lower -le higher ]]; do
     mid=$((($lower+$higher)/2))
     echo lower is $lower
     echo mid is $mid
     echo higher is $higher
-    python3 test.py $seed $mid
+    python3 test.py $seed $mid $grid > /dev/null
     if [[ $? -eq 1 ]]
     then
         lower=$(($mid+1))
@@ -23,4 +24,4 @@ while [[ lower -lt higher ]]; do
         higher=$(($mid-1))
     fi
 done
-echo optimal is $mid
+echo optimal is $(($mid+1))

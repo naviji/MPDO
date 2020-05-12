@@ -36,8 +36,8 @@ def get_robot_pos(m,hop):
 def path_valid(robot_plan, obs_plan):
     return len([(a, b) for a, b in list(zip(robot_plan, obs_plan)) if a == b]) == 0
     
-GRID_SZ = 4
-HOPS = 6
+GRID_SZ = 10
+HOPS = 17
 
 print("WORKSPACE SIZE (%s x %s)" % (GRID_SZ, GRID_SZ))
 print("HOPS ALLOWED = %s" % (HOPS))
@@ -88,10 +88,11 @@ def main(args):
                     s.add(simplify(Implies(X[t+1][x][y], temp)))
 
     hop = 0
-    s.check()
-
-    m = s.model()
-
+    if s.check() == sat:
+        m = s.model()
+    else:
+        print("No.of hops too low...")
+        exit(1)
     obs1 = Obstacle(0, 3, GRID_SZ)
 
     robot_plan = []

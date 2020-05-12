@@ -21,13 +21,13 @@ class Obstacle:
 def get_plan(m):
     return sorted([d.name() for d in m.decls() if m[d]==True], key=lambda item: int(item.split('_')[1]))
 
-GRID_SZ = 4
+# GRID_SZ = 4
 # HOPS = 10
 
 def main(args):
     seed_val = int(args[0])
     HOPS = int(args[1])
-
+    GRID_SZ = int(args[2])
     random.seed(seed_val)
     # X is a three dimensional grid containing (t, x, y)
     X =  [ [ [ Bool("x_%s_%s_%s" % (k, i, j)) 
