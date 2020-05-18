@@ -12,7 +12,8 @@ class Obstacle:
     
     def next_move(self):
         while (True):
-            dx, dy = random.choice(self.moves)
+            # dx, dy = random.choice(self.moves)
+            dx, dy = (0, 0)
             if ((0 <= self.x+dx < self.grid) and (0 <= self.y+dy < self.grid)):
                 self.x += dx
                 self.y += dy
@@ -43,8 +44,8 @@ def get_robot_pos(m,hop):
 def path_valid(robot_plan, obs_plan):
     return len([(a, b) for a, b in list(zip(robot_plan, obs_plan)) if a == b]) == 0
     
-GRID_SZ = 10
-HOPS = 18
+GRID_SZ = 5
+HOPS = 9
 
 print("WORKSPACE SIZE (%s x %s)" % (GRID_SZ, GRID_SZ))
 print("HOPS ALLOWED = %s" % (HOPS))
@@ -60,14 +61,18 @@ def main(args):
         for i in range(GRID_SZ) ] 
         for k in range(HOPS+1)]
 
-    s = Solver()
+    COST =  [ [ [ Int("c_%s_%s_%s" % (k, i, j)) for j in range(GRID_SZ) ]
+        for i in range(GRID_SZ) ] 
+        for k in range(HOPS+1)]
+
+    s = Optimize()
 
     # Initial Constraints
     s.add(X[0][0][0])
     s.add([Not(cell) for row in X[0] for cell in row][1:])
 
     # Final constraints
-    s.add(X[HOPS][GRID_SZ-1][GRID_SZ-1])
+    s.add(X[HOPS][GRID_SZ-1][GRID_SZ-1]) 1
     s.add([Not(cell) for row in X[HOPS] for cell in row][:-1])
 
     #Sanity Constraints
@@ -93,6 +98,16 @@ def main(args):
                     if (y-1 >= 0):
                         temp = Or(temp, X[t][x][y-1])
                     s.add(simplify(Implies(X[t+1][x][y], temp)))
+
+    def distance(x1, y1, x2, y2):
+        return abs(x1-y1) + abs(x2-y2)
+
+    # Cost constraints
+    for t in range(HOPS):
+        for x in range(GRID_SZ):
+            for y in range(GRID_SZ):
+                s.add_soft(Not(X[t][x][y]), distance(x, y, GRID_SZ-1, GRID_SZ-1))
+
 
     hop = 0
     if s.check() == sat:
@@ -167,3 +182,12 @@ def main(args):
 if __name__ == "__main__":
     # print(sys.argv)
     main(sys.argv[1:])
+
+
+# add only general motion primitives
+# minimize the cost function
+
+
+
+
+
