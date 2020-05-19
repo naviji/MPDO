@@ -1,4 +1,5 @@
-from z3 import *
+from z3 import Not, Bool, Int, Optimize
+from z3 import And, Or, simplify, Implies, sat, unsat
 import random
 import sys
 
@@ -43,9 +44,12 @@ def get_robot_pos(m,hop):
 
 def path_valid(robot_plan, obs_plan):
     return len([(a, b) for a, b in list(zip(robot_plan, obs_plan)) if a == b]) == 0
-    
+
+def distance(x1, y1, x2, y2):
+        return abs(x1-x2) + abs(y1-y2)    
+
 GRID_SZ = 5
-HOPS = 9
+HOPS = 10
 
 print("WORKSPACE SIZE (%s x %s)" % (GRID_SZ, GRID_SZ))
 print("HOPS ALLOWED = %s" % (HOPS))
@@ -61,10 +65,6 @@ def main(args):
         for i in range(GRID_SZ) ] 
         for k in range(HOPS+1)]
 
-    COST =  [ [ [ Int("c_%s_%s_%s" % (k, i, j)) for j in range(GRID_SZ) ]
-        for i in range(GRID_SZ) ] 
-        for k in range(HOPS+1)]
-
     s = Optimize()
 
     # Initial Constraints
@@ -72,7 +72,7 @@ def main(args):
     s.add([Not(cell) for row in X[0] for cell in row][1:])
 
     # Final constraints
-    s.add(X[HOPS][GRID_SZ-1][GRID_SZ-1]) 1
+    s.add(X[HOPS][GRID_SZ-1][GRID_SZ-1])
     s.add([Not(cell) for row in X[HOPS] for cell in row][:-1])
 
     #Sanity Constraints
@@ -99,8 +99,6 @@ def main(args):
                         temp = Or(temp, X[t][x][y-1])
                     s.add(simplify(Implies(X[t+1][x][y], temp)))
 
-    def distance(x1, y1, x2, y2):
-        return abs(x1-y1) + abs(x2-y2)
 
     # Cost constraints
     for t in range(HOPS):
@@ -119,6 +117,8 @@ def main(args):
 
     robot_plan = []
     obs_plan = []
+    # for a in s.assertions():
+    #     print(a)
     while (hop < HOPS):
         
         robot_pos = (0, 0) if hop == 0 else get_robot_pos(m,hop)
