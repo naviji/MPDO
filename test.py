@@ -1,6 +1,7 @@
 from z3 import *
 import random
 import sys
+import time
 
 class Obstacle:
     moves = [(0,0), (1,0), (0,1), (-1,0), (0,-1)]
@@ -84,11 +85,14 @@ def main(args):
         m = s.model()
         print(get_plan(m))
         print(obs_plan)
-        exit(0)
+        return 0
     else:
         print("UNSAT!!")
-        exit(1)
+        return 1
 
 if __name__ == "__main__":
     # print(sys.argv)
+    start_time = time.time()
+    print("hello")
     main(sys.argv[1:])
+    print("--- %s seconds ---" % (time.time() - start_time))

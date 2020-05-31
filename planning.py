@@ -4,6 +4,11 @@ import random
 import sys
 import time
 
+class Primitive:
+    
+
+
+
 class Obstacle:
     moves = [(0,0), (1,0), (0,1), (-1,0), (0,-1)]
 
@@ -101,11 +106,11 @@ def main(args):
                     s.add(simplify(Implies(X[t+1][x][y], temp)))
 
 
-    # Cost constraints
-    for t in range(HOPS):
-        for x in range(GRID_SZ):
-            for y in range(GRID_SZ):
-                s.add_soft(Not(X[t][x][y]), distance(x, y, GRID_SZ-1, GRID_SZ-1))
+    # # Cost constraints
+    # for t in range(HOPS):
+    #     for x in range(GRID_SZ):
+    #         for y in range(GRID_SZ):
+    #             s.add_soft(Not(X[t][x][y]), distance(x, y, GRID_SZ-1, GRID_SZ-1))
 
 
     hop = 0
@@ -186,6 +191,9 @@ if __name__ == "__main__":
     main(sys.argv[1:])
     print("--- %s seconds ---" % (time.time() - start_time))
 
+
+# add only general motion primitives
+# minimize the cost function
 
 
 
