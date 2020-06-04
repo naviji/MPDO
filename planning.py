@@ -5,6 +5,12 @@ import sys
 import time
 
 class Primitive:
+    def __init__(self, id, swath, final_x, final_y):
+        self.id = id
+        self.swath = swath
+        self.final_x = final_x
+        self.final_y = final_y
+
     
 
 
@@ -65,6 +71,27 @@ def main(args):
     seed = int(args[0])
     random.seed(seed)
 
+
+    # New primitive
+    primitives = []
+
+    # Stay there
+    primitives.append(Primitive(1, [[0,0]], 0, 0))
+
+    # Move right
+    primitives.append(Primitive(2, [[0,0], [1,0]], 1, 0))
+
+    # Move left
+    primitives.append(Primitive(3, [[0,0], [-1,0]], -1, 0))
+
+    # Move up
+    primitives.append(Primitive(4, [[0,0], [0,1]], 0, 1))
+    
+    # Move down
+    primitives.append(Primitive(5, [[0,0], [0,-1]], 0, -1))
+
+    P =  [ Int("p_%s" % (k)) for k in range(HOPS+1) ]
+    
     
     # X is a three dimensional grid containing (t, x, y)
     X =  [ [ [ Bool("x_%s_%s_%s" % (k, i, j)) for j in range(GRID_SZ) ]
@@ -72,6 +99,37 @@ def main(args):
         for k in range(HOPS+1)]
 
     s = Optimize()
+
+    # P should be between 1 and 5 for each time step
+    s.add([And(1 <= prim , prim <= 5) for prim in P])
+
+    # If primitive id is one of all primitive ids , then make the corresponding swath as true
+    for grid in X:
+        for i in range(len(grid)):
+            for j in range(len(grid)):
+                for prim_var in P:
+                    for prim_instance in primitives:
+                        for s in prim_instance.swath:
+                            if ((0 <= i+s[0] < GRID_SZ) and (0 <= j+s[1] < GRID_SZ)):
+                                s.add(Implies(prim_var == prim_instance.id, grid[i + s[0]][j + s[1]]))
+
+#if the primitive chosen takes the robot out of the  out of the grid then it should be said that that primitve should not be chosen.
+
+#it could be done the same way as obstacles. We could assert the grid points to be false all througout time
+#But this would require the extension of the workspace by one grid point in every direction.
+
+    # After the timestep the position of the robot should be curr + (final_x, final_y)
+    for t in range(HOPS):
+        for x in range(GRID_SZ):
+                for y in range(GRID_SZ):
+                    for prim_instance in primitives:
+                        s.add(Implies(P[t] == prim_instance.id, X[t+1][x + prim_instance.final_x][y + prim_instance.final_y]))
+                        s.add(Implies(X[t+1][x + prim_instance.final_x][y + prim_instance.final_y], P[t] == prim_instance.id))
+                        # take this primitive if and only if this final position is reached from the current position.
+                        # 
+
+
+
 
     # Initial Constraints
     s.add(X[0][0][0])
