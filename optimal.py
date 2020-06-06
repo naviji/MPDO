@@ -13,32 +13,27 @@ class Primitive:
 
 class Obstacle:
     moves = [(0,0), (1,0), (0,1), (-1,0), (0,-1)]
+    path = []
 
     def __init__(self, x, y, grid):
         self.x = x
         self.y = y
         self.grid = grid
         self.dx, self.dy = random.choice(self.moves)
-        self.path = [(x, y)]
-        
     
     def next_move(self):
         # if ((0 <= self.x+self.dx < self.grid) and (0 <= self.y+self.dy < self.grid)):
         self.x += self.dx
         self.y += self.dy
-        self.path.append((self.x, self.y))
         return (self.x, self.y)
 
-    def add_constraints(self, s, X, t):
-        nx, ny = self.x, self.y
-        while t < HOPS+1:
-            if((0 <= nx < GRID_SZ) and (0 <= ny  < GRID_SZ)):
-                s.add(Not(X[t][nx][ny]))
+    def add_constraints(self, s, X):
+        for t in range(HOPS+1):
             nx, ny = self.next_move()
-            t += 1
+            if((0 <= nx < GRID_SZ) and (0 <= ny  < GRID_SZ)):
+                self.path.append((nx, ny))
+                s.add(Not(X[t][nx][ny]))
     
-def sense_object(robot_pos, obs_pos):
-    return (abs(robot_pos[0] - obs_pos[0]) <= 1) or (abs(robot_pos[1] - obs_pos[1]) <= 1)
 
 
 def next_intersection_points(next_robot_pos, obs_pos):
@@ -62,8 +57,8 @@ def path_valid(robot_plan, obs_plan):
 def distance(x1, y1, x2, y2):
         return abs(x1-x2) + abs(y1-y2)    
 
-GRID_SZ = 5
-HOPS = 8
+GRID_SZ = 10
+HOPS = 18
 
 print("WORKSPACE SIZE (%s x %s)" % (GRID_SZ, GRID_SZ))
 print("HOPS ALLOWED = %s" % (HOPS))
@@ -154,22 +149,27 @@ def main(args):
 
 
     ## SIMULATION STARTS HERE ##
+    # hop = 0
     if s.check() == sat:
         m = s.model()
     else:
         print("No.of hops too low...")
         exit(1)
 
-    # obs1.add_constraints(s, X) # Add future positions of obs1 to solver
+    obs = [Obstacle(0, 3, GRID_SZ), Obstacle(2, 2, GRID_SZ)]
     
-    # if (s.check() == sat):
-    #     m = s.model()
-    #     robot_plan = get_plan(m)
-    #     obs_path = obs1.path
-    #     print("Robot plan:")
-    #     print(robot_plan)
-    #     print("Obstacle path")
-    #     print(obs_path)
+    obs[0].add_constraints(s, X) # Add future positions of obs1 to solver
+    obs[1].add_constraints(s, X)
+    robot_plan = []
+    if (s.check() == sat):
+        m = s.model()
+        robot_plan = get_plan(m)
+        print("Robot plan:")
+        print(robot_plan)
+        print("Obstacle path")
+        for obstacle in obs:
+            obs_path = obstacle.path
+            print(obs_path)
 
     # for d in m.decls():
     #     if d.name()[0] == 'p':
@@ -179,44 +179,77 @@ def main(args):
     # # obs_plan = []
     # # for a in s.assertions():
     # #     print(a)
-    
-    obs = [Obstacle(0, 3, GRID_SZ), Obstacle(2, 2, GRID_SZ)]
-    robot_plan = []
-    hop = 0
-    while (hop < HOPS):
-        robot_pos = get_robot_pos(m,hop)
-        flag = False
-        for obstacle in obs:
-            obs_pos = (obstacle.x, obstacle.y)
-            print(obs_pos)
-            obstacle.next_move()
+    # while (hop < HOPS):
+        
+    #     robot_pos = (0, 0) if hop == 0 else get_robot_pos(m,hop)
+    #     obs_pos = obs1.next_move()
+        
+    #     s.add(X[hop][robot_pos[0]][robot_pos[1]])
+    #     # print("hop is ", hop)
+    #     # print("robot at ", robot_pos)
+    #     # print("obs at ", obs_pos)
 
-            if sense_object(robot_pos, obs_pos):
-                flag = True
-                obstacle.add_constraints(s, X, hop)
-        if flag:
-            if s.check() == sat:
-                m = s.model()
-            else:
-                print("You have run into a ditch.")
-                print("GAME OVER!")
-                exit(1)    
-        hop += 1
+    #     if robot_pos == obs_pos:
+    #         print("COLLISION!!!")
+    #         print(robot_plan)
+    #         print(obs_plan)
+    #         exit()
 
-    robot_plan = get_plan(m)
-    
-    print("Robot plan:")
-    print(robot_plan)
-    print("Obstacle path")
-    for obstacle in obs:
-        obs_path = obstacle.path
-        print(obs_path)
+    #     robot_plan.append(robot_pos)
+    #     obs_plan.append(obs_pos)
+    #     #next position of the robot
+    #     next_robot_pos = get_robot_pos(m,hop+1)
+    #     s.push()
+    #     # print("intersection points")
+    #     # print(intersection_points(robot_pos, obs_pos))
+    #     # count = 0
+    #     next_overlap = next_intersection_points(next_robot_pos, obs_pos)
+    #     for (x, y) in next_overlap:
+    #         # consider only the intersection with the next step in the plan
+    #         s.add(Not(X[hop+1][x][y]))
+        
+    #     if len(next_overlap)>0: # we need to find a new path
+    #         if (s.check() == unsat):
+    #             print("stay there")
+    #         else:
+    #             m = s.model()
+    #             # print("Plan for hop = " + str(hop+1))
+    #             # print(get_plan(m))
+    #             hop += 1
+    #     else:
+    #         # we don't need to worry about the path
+    #         hop += 1
 
+    #     s.pop()
+        
+    # robot_pos = get_robot_pos(m,hop)
+    # obs_pos = obs1.next_move()
+    # # print("hop is ", hop)
+    # # print("robot at ", robot_pos)
+    # # print("obs at ", obs_pos)
+    # robot_plan.append(robot_pos)
+    # obs_plan.append(obs_pos)
+
+    # if path_valid(robot_plan, obs_plan):
+    #     print("PATH IS VALID!!!")
+    # else:
+    #     print("PATH IS INVALID!!!")
+    # print("ROBOT MOVEMENT:")
+    # print(robot_plan)
+    # print("OBSTACLE MOVEMENT:")
+    # print(obs_plan)
 
 if __name__ == "__main__":
+    # print(sys.argv)
     start_time = time.time()
     main(sys.argv[1:])
     print("--- %s seconds ---" % (time.time() - start_time))
+
+
+# add only general motion primitives
+# minimize the cost function
+
+
 
 
 

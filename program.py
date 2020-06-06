@@ -49,8 +49,8 @@ def path_valid(robot_plan, obs_plan):
 def distance(x1, y1, x2, y2):
         return abs(x1-x2) + abs(y1-y2)    
 
-GRID_SZ = 15
-HOPS = 28
+GRID_SZ = 10
+HOPS = 18
 
 print("WORKSPACE SIZE (%s x %s)" % (GRID_SZ, GRID_SZ))
 print("HOPS ALLOWED = %s" % (HOPS))
