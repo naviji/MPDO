@@ -14,11 +14,5 @@ On each step it checks whether its next step falls in the immediate neighbourhoo
 
 In the case that the current set of constraints cannot be satisfied the robot stays in the current position till the obstacle moves out of the way. Note that if the obstacles moves into the robot there could be cases where there is no way to avoid collision.
 
-The current primitive version of a solution that we achieved considers only one robot and one obstacle both occupying one grid point each. 
 
 [workspace](workspace.png)
-
-# Where we need help
-The concept of an optimal path does not exist if we do not consider the future position of the obstacles. (Making the workspace 3 dimensional) 
-
-But considering the future to make a plan also makes no sense. Therefore we are unsure of the direction in which to continue.
