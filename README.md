@@ -14,5 +14,4 @@ On each step it checks whether its next step falls in the immediate neighbourhoo
 
 In the case that the current set of constraints cannot be satisfied the robot stays in the current position till the obstacle moves out of the way. Note that if the obstacles moves into the robot there could be cases where there is no way to avoid collision.
 
-
-[workspace](workspace.png)
+![workspace](workspace.png) 
